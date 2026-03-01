@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## IMPORTANT: Docs-First Requirement
+
+**Before generating any code, Claude Code MUST first check the `/docs` directory for relevant documentation.** All implementation decisions should align with the specs, designs, and guidelines found there. If a relevant doc exists, follow it — do not infer or invent patterns that contradict it.
+
 ## Commands
 
 ```bash
@@ -10,6 +14,8 @@ npm run build    # Build for production
 npm run start    # Start production server
 npm run lint     # Run ESLint
 ```
+
+- /docs/ui.md
 
 ## Architecture
 

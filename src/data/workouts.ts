@@ -3,6 +3,129 @@ import { workouts, workoutExercises, exercises, sets } from "@/db/schema";
 import { eq, and, gte, lt, count, inArray, asc } from "drizzle-orm";
 import { startOfDay, addDays } from "date-fns";
 
+export async function createWorkout(userId: string, name: string, startedAt?: Date, completedAt?: Date) {
+  const [workout] = await db
+    .insert(workouts)
+    .values({ userId, name, startedAt, completedAt })
+    .returning();
+  return workout;
+}
+
+export async function addExerciseToWorkout(workoutId: number, exerciseId: number, userId: string) {
+  const [workout] = await db
+    .select({ id: workouts.id })
+    .from(workouts)
+    .where(and(eq(workouts.id, workoutId), eq(workouts.userId, userId)));
+  if (!workout) throw new Error("Workout not found");
+
+  const [result] = await db
+    .select({ total: count(workoutExercises.id) })
+    .from(workoutExercises)
+    .where(eq(workoutExercises.workoutId, workoutId));
+  const order = Number(result?.total ?? 0) + 1;
+
+  const [we] = await db
+    .insert(workoutExercises)
+    .values({ workoutId, exerciseId, order })
+    .returning();
+  return we;
+}
+
+export async function removeExerciseFromWorkout(workoutExerciseId: number, userId: string) {
+  const [we] = await db
+    .select({ id: workoutExercises.id })
+    .from(workoutExercises)
+    .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+    .where(and(eq(workoutExercises.id, workoutExerciseId), eq(workouts.userId, userId)));
+  if (!we) throw new Error("Not found");
+
+  await db.delete(workoutExercises).where(eq(workoutExercises.id, workoutExerciseId));
+}
+
+export async function addSet(
+  workoutExerciseId: number,
+  data: { weightLbs?: string | null; reps?: number | null; durationSeconds?: number | null },
+  userId: string
+) {
+  const [we] = await db
+    .select({ id: workoutExercises.id })
+    .from(workoutExercises)
+    .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+    .where(and(eq(workoutExercises.id, workoutExerciseId), eq(workouts.userId, userId)));
+  if (!we) throw new Error("Not found");
+
+  const [countResult] = await db
+    .select({ total: count(sets.id) })
+    .from(sets)
+    .where(eq(sets.workoutExerciseId, workoutExerciseId));
+  const setNumber = Number(countResult?.total ?? 0) + 1;
+
+  const [newSet] = await db
+    .insert(sets)
+    .values({ workoutExerciseId, setNumber, ...data, completed: false })
+    .returning();
+  return newSet;
+}
+
+export async function toggleSetCompleted(setId: number, completed: boolean, userId: string) {
+  const [found] = await db
+    .select({ id: sets.id })
+    .from(sets)
+    .innerJoin(workoutExercises, eq(sets.workoutExerciseId, workoutExercises.id))
+    .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+    .where(and(eq(sets.id, setId), eq(workouts.userId, userId)));
+  if (!found) throw new Error("Not found");
+
+  await db.update(sets).set({ completed }).where(eq(sets.id, setId));
+}
+
+export async function completeWorkout(workoutId: number, userId: string) {
+  const [workout] = await db
+    .update(workouts)
+    .set({ completedAt: new Date() })
+    .where(and(eq(workouts.id, workoutId), eq(workouts.userId, userId)))
+    .returning();
+  return workout;
+}
+
+export async function updateWorkoutName(workoutId: number, name: string, userId: string) {
+  const [workout] = await db
+    .update(workouts)
+    .set({ name })
+    .where(and(eq(workouts.id, workoutId), eq(workouts.userId, userId)))
+    .returning();
+  return workout;
+}
+
+export async function updateSet(
+  setId: number,
+  data: { weightLbs?: string | null; reps?: number | null; durationSeconds?: number | null },
+  userId: string
+) {
+  const [found] = await db
+    .select({ id: sets.id })
+    .from(sets)
+    .innerJoin(workoutExercises, eq(sets.workoutExerciseId, workoutExercises.id))
+    .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+    .where(and(eq(sets.id, setId), eq(workouts.userId, userId)));
+  if (!found) throw new Error("Not found");
+
+  const [updated] = await db.update(sets).set(data).where(eq(sets.id, setId)).returning();
+  return updated;
+}
+
+export async function deleteSet(setId: number, userId: string) {
+  const [found] = await db
+    .select({ id: sets.id })
+    .from(sets)
+    .innerJoin(workoutExercises, eq(sets.workoutExerciseId, workoutExercises.id))
+    .innerJoin(workouts, eq(workoutExercises.workoutId, workouts.id))
+    .where(and(eq(sets.id, setId), eq(workouts.userId, userId)));
+  if (!found) throw new Error("Not found");
+
+  await db.delete(sets).where(eq(sets.id, setId));
+}
+
 export async function getWorkoutsForDate(userId: string, date: Date) {
   const start = startOfDay(date);
   const end = startOfDay(addDays(date, 1));
@@ -13,8 +136,8 @@ export async function getWorkoutsForDate(userId: string, date: Date) {
     .where(
       and(
         eq(workouts.userId, userId),
-        gte(workouts.createdAt, start),
-        lt(workouts.createdAt, end)
+        gte(workouts.startedAt, start),
+        lt(workouts.startedAt, end)
       )
     );
 
@@ -105,6 +228,7 @@ export async function getWorkoutDetail(workoutId: number, userId: string) {
     sets: setRows
       .filter((s) => s.workoutExerciseId === ex.workoutExerciseId)
       .map((s) => ({
+        id: s.id,
         setNumber: s.setNumber,
         weightLbs: s.weightLbs,
         reps: s.reps,

@@ -8,6 +8,8 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -32,28 +34,36 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          <header className="flex items-center gap-2 px-4 py-3">
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button className="rounded-md border border-[#6c47ff] px-4 py-1.5 text-sm text-[#6c47ff] hover:bg-[#6c47ff]/10 transition-colors">
-                  Sign In
-                </button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button className="rounded-md bg-[#6c47ff] px-4 py-1.5 text-sm text-white hover:bg-[#5535e0] transition-colors">
-                  Sign Up
-                </button>
-              </SignUpButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </header>
-          {children}
+          <ThemeProvider
+            defaultTheme="system"
+            storageKey="ui-theme"
+          >
+            <header className="flex items-center justify-between gap-2 px-4 py-3 border-b">
+              <div className="flex items-center gap-2">
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <button className="rounded-md border border-primary px-4 py-1.5 text-sm text-primary hover:bg-accent transition-colors">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <button className="rounded-md bg-primary px-4 py-1.5 text-sm text-primary-foreground hover:bg-primary/90 transition-colors">
+                      Sign Up
+                    </button>
+                  </SignUpButton>
+                </SignedOut>
+                <SignedIn>
+                  <UserButton />
+                </SignedIn>
+              </div>
+              <ThemeToggle />
+            </header>
+            {children}
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

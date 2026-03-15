@@ -274,3 +274,25 @@ export async function getWorkoutDetail(workoutId: number, userId: string) {
     exercises: exerciseDetails,
   };
 }
+
+export async function getWorkoutDatesForMonth(userId: string, startDate: Date, endDate: Date) {
+  const start = startOfDay(startDate);
+  const end = startOfDay(endDate);
+
+  const workoutDates = await db
+    .select({
+      date: workouts.startedAt,
+    })
+    .from(workouts)
+    .where(
+      and(
+        eq(workouts.userId, userId),
+        gte(workouts.startedAt, start),
+        lt(workouts.startedAt, end)
+      )
+    );
+
+  return workoutDates
+    .filter(w => w.date !== null)
+    .map(w => startOfDay(w.date!));
+}

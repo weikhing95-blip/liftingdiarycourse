@@ -10,6 +10,9 @@ export default async function WorkoutActivePage({
   params: Promise<{ id: string }>;
 }) {
   const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
 
   const { id } = await params;
   const workoutId = parseInt(id);

@@ -9,6 +9,9 @@ export default async function EditWorkoutPage({
   params: Promise<{ id: string }>;
 }) {
   const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
 
   const { id: workoutId } = await params;
   const id = parseInt(workoutId);

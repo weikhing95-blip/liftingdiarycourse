@@ -19,6 +19,7 @@ npm run lint     # Run ESLint
 - /docs/data-fetching.md
 - /docs/data-mutations.md
 - /docs/auth.md
+- /docs/routing.md
 
 ## Architecture
 

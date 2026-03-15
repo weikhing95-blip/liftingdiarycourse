@@ -126,6 +126,27 @@ export async function deleteSet(setId: number, userId: string) {
   await db.delete(sets).where(eq(sets.id, setId));
 }
 
+export async function getWorkoutById(workoutId: number, userId: string) {
+  const [workout] = await db
+    .select()
+    .from(workouts)
+    .where(and(eq(workouts.id, workoutId), eq(workouts.userId, userId)));
+  return workout ?? null;
+}
+
+export async function updateWorkoutDetails(
+  workoutId: number,
+  data: { name: string; startedAt: Date; completedAt: Date | null },
+  userId: string
+) {
+  const [workout] = await db
+    .update(workouts)
+    .set({ name: data.name, startedAt: data.startedAt, completedAt: data.completedAt })
+    .where(and(eq(workouts.id, workoutId), eq(workouts.userId, userId)))
+    .returning();
+  return workout;
+}
+
 export async function getWorkoutsForDate(userId: string, date: Date) {
   const start = startOfDay(date);
   const end = startOfDay(addDays(date, 1));

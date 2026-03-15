@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { getWorkoutDetail } from "@/data/workouts";
 import { getAllExercises } from "@/data/exercises";
 import { WorkoutActiveClient } from "./workout-active-client";
@@ -10,7 +10,9 @@ export default async function WorkoutActivePage({
   params: Promise<{ id: string }>;
 }) {
   const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
 
   const { id } = await params;
   const workoutId = parseInt(id);

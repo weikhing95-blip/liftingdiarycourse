@@ -1,5 +1,4 @@
 import { auth } from "@clerk/nextjs/server"
-import { redirect } from "next/navigation"
 import Link from "next/link"
 import { format, parseISO } from "date-fns"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +13,10 @@ export default async function DashboardPage({
   searchParams: Promise<{ date?: string; workout?: string }>
 }) {
   const { userId } = await auth()
-  if (!userId) redirect("/sign-in")
+
+  if (!userId) {
+    throw new Error("Unauthorized")
+  }
 
   const { date: dateParam, workout: workoutParam } = await searchParams
   const dateStr = dateParam ?? format(new Date(), "yyyy-MM-dd")

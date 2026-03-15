@@ -28,9 +28,22 @@ export function ThemeProvider({
   storageKey = "ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage?.getItem(storageKey) as Theme) || defaultTheme
-  )
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === "undefined") {
+      return defaultTheme
+    }
+    return (localStorage?.getItem(storageKey) as Theme) || defaultTheme
+  })
+
+  // Hydrate theme from localStorage on client side
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedTheme = localStorage?.getItem(storageKey) as Theme
+      if (storedTheme && storedTheme !== theme) {
+        setTheme(storedTheme)
+      }
+    }
+  }, [storageKey, theme])
 
   useEffect(() => {
     const root = window.document.documentElement
@@ -52,9 +65,11 @@ export function ThemeProvider({
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
-      localStorage?.setItem(storageKey, theme)
-      setTheme(theme)
+    setTheme: (newTheme: Theme) => {
+      if (typeof window !== "undefined") {
+        localStorage?.setItem(storageKey, newTheme)
+      }
+      setTheme(newTheme)
     },
   }
 

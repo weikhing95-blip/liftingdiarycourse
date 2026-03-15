@@ -14,6 +14,10 @@ export default async function DashboardPage({
 }) {
   const { userId } = await auth()
 
+  if (!userId) {
+    throw new Error("Unauthorized")
+  }
+
   const { date: dateParam, workout: workoutParam } = await searchParams
   const dateStr = dateParam ?? format(new Date(), "yyyy-MM-dd")
   const date = dateParam ? parseISO(dateParam) : new Date()

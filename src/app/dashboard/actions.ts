@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { updateWorkoutName, updateSet, deleteSet } from "@/data/workouts";
+import { updateWorkoutName, updateSet, deleteSet, getWorkoutDatesForMonth } from "@/data/workouts";
 
 const updateWorkoutNameSchema = z.object({
   workoutId: z.number().int().positive(),
@@ -51,4 +51,17 @@ export async function deleteSetAction(setId: number) {
   const { setId: id } = deleteSetSchema.parse({ setId });
   await deleteSet(id, userId);
   revalidatePath("/dashboard");
+}
+
+const getWorkoutDatesSchema = z.object({
+  startDate: z.date(),
+  endDate: z.date(),
+});
+
+export async function getWorkoutDatesForMonthAction(input: { startDate: Date; endDate: Date }) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const { startDate, endDate } = getWorkoutDatesSchema.parse(input);
+  return await getWorkoutDatesForMonth(userId, startDate, endDate);
 }

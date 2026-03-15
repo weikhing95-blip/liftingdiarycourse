@@ -292,5 +292,7 @@ export async function getWorkoutDatesForMonth(userId: string, startDate: Date, e
       )
     );
 
-  return workoutDates.map(w => startOfDay(w.date));
+  return workoutDates
+    .filter(w => w.date !== null)
+    .map(w => startOfDay(w.date!));
 }

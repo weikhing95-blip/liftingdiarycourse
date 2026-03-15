@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import { getWorkoutById } from "@/data/workouts";
 import { EditWorkoutClient } from "./edit-workout-client";
 
@@ -9,7 +9,7 @@ export default async function EditWorkoutPage({
   params: Promise<{ id: string }>;
 }) {
   const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+  if (!userId) throw new Error("User not authenticated");
 
   const { id: workoutId } = await params;
   const id = parseInt(workoutId);

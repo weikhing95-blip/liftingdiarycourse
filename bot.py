@@ -36,6 +36,7 @@ from telegram.ext import (
 
 import sessions
 from extraction import IMAGE_MEDIA_TYPES, extract_ticket
+from pdf import build_trip_pdf
 
 logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -125,20 +126,41 @@ async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Placeholder for /done until Phase 3 wires in PDF synthesis."""
-    if update.message is None or update.effective_user is None:
+    """Build the trip PDF, send it, and clear the session."""
+    message = update.message
+    if message is None or update.effective_user is None:
         return
-    n = sessions.count(update.effective_user.id)
-    if n == 0:
-        await update.message.reply_text(
+    user_id = update.effective_user.id
+
+    items = sessions.get_items(user_id)
+    if not items:
+        await message.reply_text(
             "You haven't sent any tickets yet — send a few photos first, then /done."
         )
         return
+
+    await message.reply_text("🛠️ Building your trip PDF…")
+
+    try:
+        # WeasyPrint render is CPU-bound and sync — run it off the event loop.
+        pdf_bytes, filename = await asyncio.to_thread(build_trip_pdf, items)
+    except Exception:
+        logger.exception("PDF build failed for user %s", user_id)
+        # Keep the session so the user can retry without re-sending tickets.
+        await message.reply_text(
+            "😕 Something went wrong building your PDF. Your tickets are still "
+            "saved — try /done again in a moment."
+        )
+        return
+
+    n = len(items)
     plural = "s" if n != 1 else ""
-    await update.message.reply_text(
-        f"📦 You have {n} item{plural} ready. PDF generation is the next build "
-        "phase — it isn't wired up yet."
+    await message.reply_document(
+        document=pdf_bytes,
+        filename=filename,
+        caption=f"✅ Your trip — {n} item{plural}, in order. Safe travels!",
     )
+    sessions.clear(user_id)
 
 
 async def reset(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

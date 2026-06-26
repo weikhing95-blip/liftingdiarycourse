@@ -23,6 +23,8 @@ env/
 # Env files (secrets: bot token + vision API key live here)
 .env
 .env.*
+# but keep the template (no real secrets, safe to commit)
+!.env.example
 
 # Misc
 .DS_Store

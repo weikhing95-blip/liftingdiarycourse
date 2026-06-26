@@ -1,36 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Telegram Trip-PDF Bot
 
-## Getting Started
+> Send ticket images to a Telegram bot, type `/done`, and get back a single clean PDF
+> with all your trip information synthesized and arranged in chronological order.
 
-First, run the development server:
+This repository was previously a Next.js "lifting diary" course app. That code has
+been retired (it remains in git history) and the repo is being rebuilt around the
+build plan in [`docs/BuildPlan.md`](docs/BuildPlan.md).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Status
+
+🚧 Pre-build. The build plan and review gates are agreed; implementation has not started.
+
+## The North Star
+
+One hypothesis under test: **the synthesized PDF is good enough that the user would
+actually use it.** Everything in scope serves that and nothing else.
+
+## High-level pipeline
+
+```
+images → vision extraction → in-memory session → /done → chronological sort → HTML→PDF → send
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [`docs/BuildPlan.md`](docs/BuildPlan.md) for the full phased plan and the four
+review hats (PM, QA, Engineering, Security) that gate it.

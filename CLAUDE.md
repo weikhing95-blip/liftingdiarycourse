@@ -2,32 +2,45 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## What this project is
+
+A **Telegram Trip-PDF Bot**. A user sends ticket images to the bot, types `/done`,
+and receives a single clean PDF with all their trip information synthesized and
+arranged in chronological order.
+
+> ⚠️ History note: this repo previously held a Next.js "lifting diary" app. That
+> code was retired (still in git history). Ignore Next.js/Node/Drizzle/Neon
+> conventions — they do not apply to the bot.
+
 ## IMPORTANT: Docs-First Requirement
 
-**Before generating any code, Claude Code MUST first check the `/docs` directory for relevant documentation.** All implementation decisions should align with the specs, designs, and guidelines found there. If a relevant doc exists, follow it — do not infer or invent patterns that contradict it.
+**Before generating any code, Claude Code MUST first check the `/docs` directory.**
+The source of truth is:
 
-## Commands
+- [`/docs/BuildPlan.md`](docs/BuildPlan.md) — the phased build plan and the four
+  review hats (PM, QA, Engineering, Security) that gate every phase.
 
-```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run start    # Start production server
-npm run lint     # Run ESLint
-```
+All implementation decisions must align with the build plan. Do not infer or invent
+patterns that contradict it.
 
-- /docs/ui.md
-- /docs/data-fetching.md
-- /docs/data-mutations.md
-- /docs/auth.md
-- /docs/routing.md
+## Architecture (planned)
 
-## Architecture
+- **Language/runtime:** Python, single script / small package, single host.
+- **Bot framework:** a Telegram bot library (e.g. `python-telegram-bot`).
+- **State:** in-memory dict keyed by Telegram user ID. A restart clears it (accepted for MVP).
+- **Extraction:** each uploaded image → vision-model API → structured JSON per item.
+- **PDF:** render an HTML template → PDF via **WeasyPrint** (styling is easier than low-level drawing).
+- **Privacy:** raw ticket images are **discarded after extraction**. Only extracted
+  fields are held in memory, and they are dropped once the PDF is delivered. Never
+  persist raw tickets to disk.
 
-This is a **Next.js 16** app using the App Router (`src/app/`), React 19, TypeScript (strict mode), and Tailwind CSS v4.
+## Secrets
 
-- **Routing**: File-based via `src/app/` — each `page.tsx` is a route, `layout.tsx` wraps children
-- **Styling**: Tailwind CSS v4 imported via `@import "tailwindcss"` in `globals.css` (no `tailwind.config.js` needed)
-- **Path alias**: `@/*` maps to `./src/*`
-- **Fonts**: Geist Sans and Geist Mono loaded via `next/font/google` in the root layout, exposed as CSS variables `--font-geist-sans` and `--font-geist-mono`
+Two credentials, kept in `.env` (never committed): the Telegram **bot token** and a
+**vision-model API key**.
 
-Currently a fresh `create-next-app` scaffold — no database, auth, or business logic yet.
+## Scope guardrails (out of scope for MVP)
+
+Accounts · in-chat editing · cost splitting · groups · multi-currency · multiple
+simultaneous trips · standalone app · itinerary planning. All deferred until the
+core hypothesis is validated.

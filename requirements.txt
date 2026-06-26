@@ -1,0 +1,11 @@
+# Telegram Trip-PDF Bot — Python dependencies
+#
+# WeasyPrint, Jinja2, and the Anthropic SDK are included now (ahead of when the
+# code uses them) so the Railway build validates the native PDF stack from day
+# one — see Dockerfile for the system libraries WeasyPrint needs.
+
+python-telegram-bot==21.9   # Phase 1+: bot framework (async)
+anthropic==0.40.0           # Phase 2: Claude vision extraction
+jinja2==3.1.4               # Phase 3: HTML template -> PDF
+weasyprint==63.1            # Phase 3: HTML -> PDF rendering
+python-dotenv==1.0.1        # Local .env loading
